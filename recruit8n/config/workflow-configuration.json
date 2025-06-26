@@ -1,1 +1,163 @@
-{\n  \"workflow_settings\": {\n    \"main_cv_processing\": {\n      \"name\": \"Main CV Processing Workflow\",\n      \"description\": \"Processes uploaded CVs and matches them against active jobs\",\n      \"trigger_type\": \"Google Drive File Created\",\n      \"execution_timeout\": 300,\n      \"retry_attempts\": 3,\n      \"error_handling\": \"continue_on_error\",\n      \"parameters\": {\n        \"watch_folder_id\": \"REPLACE_WITH_NEW_UNPROCESSED_FOLDER_ID\",\n        \"processing_folder_id\": \"REPLACE_WITH_PROCESSING_FOLDER_ID\",\n        \"suitable_folder_id\": \"REPLACE_WITH_SUITABLE_MATCHES_FOLDER_ID\",\n        \"alternative_folder_id\": \"REPLACE_WITH_ALTERNATIVE_MATCHES_FOLDER_ID\",\n        \"rejected_folder_id\": \"REPLACE_WITH_REJECTED_FOLDER_ID\",\n        \"candidates_sheet_id\": \"REPLACE_WITH_CANDIDATES_SHEET_ID\",\n        \"jobs_sheet_id\": \"REPLACE_WITH_JOBS_SHEET_ID\",\n        \"match_results_sheet_id\": \"REPLACE_WITH_MATCH_RESULTS_SHEET_ID\"\n      }\n    },\n    \"alternative_job_matching\": {\n      \"name\": \"Alternative Job Matching Workflow\",\n      \"description\": \"Finds alternative job opportunities for candidates\",\n      \"trigger_type\": \"Schedule/Manual\",\n      \"schedule\": \"0 9 * * *\",\n      \"execution_timeout\": 600,\n      \"retry_attempts\": 2,\n      \"parameters\": {\n        \"candidates_sheet_id\": \"REPLACE_WITH_CANDIDATES_SHEET_ID\",\n        \"jobs_sheet_id\": \"REPLACE_WITH_JOBS_SHEET_ID\",\n        \"match_results_sheet_id\": \"REPLACE_WITH_MATCH_RESULTS_SHEET_ID\",\n        \"alternative_matches_sheet_id\": \"REPLACE_WITH_ALTERNATIVE_MATCHES_SHEET_ID\",\n        \"confidence_threshold\": 75,\n        \"notification_email\": \"recruiter@yourcompany.com\"\n      }\n    },\n    \"reverse_candidate_matching\": {\n      \"name\": \"Reverse Candidate Matching Workflow\",\n      \"description\": \"Matches existing candidates against new job postings\",\n      \"trigger_type\": \"Google Drive File Created\",\n      \"execution_timeout\": 900,\n      \"retry_attempts\": 3,\n      \"parameters\": {\n        \"active_jobs_folder_id\": \"REPLACE_WITH_ACTIVE_JOBS_FOLDER_ID\",\n        \"candidates_sheet_id\": \"REPLACE_WITH_CANDIDATES_SHEET_ID\",\n        \"jobs_sheet_id\": \"REPLACE_WITH_JOBS_SHEET_ID\",\n        \"reverse_matches_sheet_id\": \"REPLACE_WITH_REVERSE_MATCHES_SHEET_ID\",\n        \"minimum_match_threshold\": 60,\n        \"notification_email\": \"recruiter@yourcompany.com\"\n      }\n    }\n  },\n  \"credentials_mapping\": {\n    \"google_api\": {\n      \"credential_name\": \"Google API Credentials\",\n      \"type\": \"googleApi\",\n      \"required_scopes\": [\n        \"https://www.googleapis.com/auth/drive\",\n        \"https://www.googleapis.com/auth/drive.file\",\n        \"https://www.googleapis.com/auth/spreadsheets\"\n      ]\n    },\n    \"google_sheets\": {\n      \"credential_name\": \"Google Sheets API\",\n      \"type\": \"googleSheetsOAuth2Api\",\n      \"required_scopes\": [\n        \"https://www.googleapis.com/auth/spreadsheets\"\n      ]\n    },\n    \"openai\": {\n      \"credential_name\": \"OpenAI API\",\n      \"type\": \"openAiApi\",\n      \"required_fields\": [\"api_key\"]\n    },\n    \"smtp\": {\n      \"credential_name\": \"SMTP Credentials\",\n      \"type\": \"smtp\",\n      \"required_fields\": [\"user\", \"password\", \"host\", \"port\"]\n    }\n  },\n  \"ai_configuration\": {\n    \"openai_model\": \"gpt-4\",\n    \"temperature\": 0.1,\n    \"max_tokens\": 2000,\n    \"cv_parsing\": {\n      \"system_prompt_key\": \"cv_parsing_system_prompt\",\n      \"temperature\": 0.1,\n      \"max_tokens\": 1500\n    },\n    \"job_matching\": {\n      \"system_prompt_key\": \"job_matching_system_prompt\",\n      \"temperature\": 0.2,\n      \"max_tokens\": 1000\n    },\n    \"alternative_matching\": {\n      \"system_prompt_key\": \"alternative_job_matching_prompt\",\n      \"temperature\": 0.3,\n      \"max_tokens\": 2000\n    },\n    \"reverse_matching\": {\n      \"system_prompt_key\": \"reverse_matching_prompt\",\n      \"temperature\": 0.2,\n      \"max_tokens\": 2500\n    },\n    \"job_parsing\": {\n      \"system_prompt_key\": \"job_description_parser_prompt\",\n      \"temperature\": 0.1,\n      \"max_tokens\": 1200\n    }\n  },\n  \"matching_thresholds\": {\n    \"suitable_match\": 70,\n    \"alternative_consideration\": 40,\n    \"rejection_threshold\": 39,\n    \"high_confidence_alert\": 85,\n    \"reverse_match_minimum\": 60\n  },\n  \"notification_settings\": {\n    \"send_immediate_alerts\": true,\n    \"high_confidence_threshold\": 85,\n    \"daily_summary_time\": \"09:00\",\n    \"weekly_report_day\": \"monday\",\n    \"email_templates\": {\n      \"candidate_match\": \"candidate_match_notification\",\n      \"alternative_match\": \"alternative_match_notification\",\n      \"reverse_match\": \"reverse_match_notification\",\n      \"high_confidence\": \"high_confidence_alert\"\n    }\n  },\n  \"file_processing\": {\n    \"supported_formats\": [\"pdf\", \"doc\", \"docx\", \"rtf\", \"txt\"],\n    \"max_file_size_mb\": 10,\n    \"text_extraction_timeout\": 30,\n    \"backup_original_files\": true,\n    \"cleanup_processed_files\": false\n  },\n  \"database_settings\": {\n    \"sheet_names\": {\n      \"candidates\": \"Candidates\",\n      \"jobs\": \"Active Jobs\",\n      \"match_results\": \"Match Results\",\n      \"alternative_matches\": \"Alternative Matches\",\n      \"reverse_matches\": \"Reverse Matches\"\n    },\n    \"auto_backup_frequency\": \"weekly\",\n    \"data_retention_days\": 365,\n    \"duplicate_detection\": true\n  },\n  \"performance_settings\": {\n    \"concurrent_cv_processing\": 3,\n    \"batch_size_reverse_matching\": 50,\n    \"api_rate_limit_delay\": 1000,\n    \"cache_job_data_minutes\": 60\n  },\n  \"error_handling\": {\n    \"max_retries\": 3,\n    \"retry_delay_seconds\": 5,\n    \"continue_on_parse_error\": true,\n    \"log_all_errors\": true,\n    \"notify_admin_on_critical_error\": true,\n    \"admin_email\": \"admin@yourcompany.com\"\n  }\n}"
+{
+  "workflow_settings": {
+    "main_cv_processing": {
+      "name": "Main CV Processing Workflow",
+      "description": "Processes uploaded CVs and matches them against active jobs",
+      "trigger_type": "Google Drive File Created",
+      "execution_timeout": 300,
+      "retry_attempts": 3,
+      "error_handling": "continue_on_error",
+      "parameters": {
+        "watch_folder_id": "REPLACE_WITH_NEW_UNPROCESSED_FOLDER_ID",
+        "processing_folder_id": "REPLACE_WITH_PROCESSING_FOLDER_ID",
+        "suitable_folder_id": "REPLACE_WITH_SUITABLE_MATCHES_FOLDER_ID",
+        "alternative_folder_id": "REPLACE_WITH_ALTERNATIVE_MATCHES_FOLDER_ID",
+        "rejected_folder_id": "REPLACE_WITH_REJECTED_FOLDER_ID",
+        "candidates_sheet_id": "REPLACE_WITH_CANDIDATES_SHEET_ID",
+        "jobs_sheet_id": "REPLACE_WITH_JOBS_SHEET_ID",
+        "match_results_sheet_id": "REPLACE_WITH_MATCH_RESULTS_SHEET_ID"
+      }
+    },
+    "alternative_job_matching": {
+      "name": "Alternative Job Matching Workflow",
+      "description": "Finds alternative job opportunities for candidates",
+      "trigger_type": "Schedule/Manual",
+      "schedule": "0 9 * * *",
+      "execution_timeout": 600,
+      "retry_attempts": 2,
+      "parameters": {
+        "candidates_sheet_id": "REPLACE_WITH_CANDIDATES_SHEET_ID",
+        "jobs_sheet_id": "REPLACE_WITH_JOBS_SHEET_ID",
+        "match_results_sheet_id": "REPLACE_WITH_MATCH_RESULTS_SHEET_ID",
+        "alternative_matches_sheet_id": "REPLACE_WITH_ALTERNATIVE_MATCHES_SHEET_ID",
+        "confidence_threshold": 75,
+        "notification_email": "recruiter@yourcompany.com"
+      }
+    },
+    "reverse_candidate_matching": {
+      "name": "Reverse Candidate Matching Workflow",
+      "description": "Matches existing candidates against new job postings",
+      "trigger_type": "Google Drive File Created",
+      "execution_timeout": 900,
+      "retry_attempts": 3,
+      "parameters": {
+        "active_jobs_folder_id": "REPLACE_WITH_ACTIVE_JOBS_FOLDER_ID",
+        "candidates_sheet_id": "REPLACE_WITH_CANDIDATES_SHEET_ID",
+        "jobs_sheet_id": "REPLACE_WITH_JOBS_SHEET_ID",
+        "reverse_matches_sheet_id": "REPLACE_WITH_REVERSE_MATCHES_SHEET_ID",
+        "minimum_match_threshold": 60,
+        "notification_email": "recruiter@yourcompany.com"
+      }
+    }
+  },
+  "credentials_mapping": {
+    "google_api": {
+      "credential_name": "Google API Credentials",
+      "type": "googleApi",
+      "required_scopes": [
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/spreadsheets"
+      ]
+    },
+    "google_sheets": {
+      "credential_name": "Google Sheets API",
+      "type": "googleSheetsOAuth2Api",
+      "required_scopes": [
+        "https://www.googleapis.com/auth/spreadsheets"
+      ]
+    },
+    "openai": {
+      "credential_name": "OpenAI API",
+      "type": "openAiApi",
+      "required_fields": ["api_key"]
+    },
+    "smtp": {
+      "credential_name": "SMTP Credentials",
+      "type": "smtp",
+      "required_fields": ["user", "password", "host", "port"]
+    }
+  },
+  "ai_configuration": {
+    "openai_model": "gpt-4",
+    "temperature": 0.1,
+    "max_tokens": 2000,
+    "cv_parsing": {
+      "system_prompt_key": "cv_parsing_system_prompt",
+      "temperature": 0.1,
+      "max_tokens": 1500
+    },
+    "job_matching": {
+      "system_prompt_key": "job_matching_system_prompt",
+      "temperature": 0.2,
+      "max_tokens": 1000
+    },
+    "alternative_matching": {
+      "system_prompt_key": "alternative_job_matching_prompt",
+      "temperature": 0.3,
+      "max_tokens": 2000
+    },
+    "reverse_matching": {
+      "system_prompt_key": "reverse_matching_prompt",
+      "temperature": 0.2,
+      "max_tokens": 2500
+    },
+    "job_parsing": {
+      "system_prompt_key": "job_description_parser_prompt",
+      "temperature": 0.1,
+      "max_tokens": 1200
+    }
+  },
+  "matching_thresholds": {
+    "suitable_match": 70,
+    "alternative_consideration": 40,
+    "rejection_threshold": 39,
+    "high_confidence_alert": 85,
+    "reverse_match_minimum": 60
+  },
+  "notification_settings": {
+    "send_immediate_alerts": true,
+    "high_confidence_threshold": 85,
+    "daily_summary_time": "09:00",
+    "weekly_report_day": "monday",
+    "email_templates": {
+      "candidate_match": "candidate_match_notification",
+      "alternative_match": "alternative_match_notification",
+      "reverse_match": "reverse_match_notification",
+      "high_confidence": "high_confidence_alert"
+    }
+  },
+  "file_processing": {
+    "supported_formats": ["pdf", "doc", "docx", "rtf", "txt"],
+    "max_file_size_mb": 10,
+    "text_extraction_timeout": 30,
+    "backup_original_files": true,
+    "cleanup_processed_files": false
+  },
+  "database_settings": {
+    "sheet_names": {
+      "candidates": "Candidates",
+      "jobs": "Active Jobs",
+      "match_results": "Match Results",
+      "alternative_matches": "Alternative Matches",
+      "reverse_matches": "Reverse Matches"
+    },
+    "auto_backup_frequency": "weekly",
+    "data_retention_days": 365,
+    "duplicate_detection": true
+  },
+  "performance_settings": {
+    "concurrent_cv_processing": 3,
+    "batch_size_reverse_matching": 50,
+    "api_rate_limit_delay": 1000,
+    "cache_job_data_minutes": 60
+  },
+  "error_handling": {
+    "max_retries": 3,
+    "retry_delay_seconds": 5,
+    "continue_on_parse_error": true,
+    "log_all_errors": true,
+    "notify_admin_on_critical_error": true,
+    "admin_email": "admin@yourcompany.com"
+  }
+}
