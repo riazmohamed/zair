@@ -1,0 +1,255 @@
+{
+  "name": "Alternative Job Matching Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "1YourMatchResultsSheetIdHere",
+        "sheetName": "Match Results",
+        "filters": {
+          "values": [
+            {
+              "column": "recommendation",
+              "value": "ALTERNATIVE"
+            }
+          ]
+        }
+      },
+      "id": "get-alternative-candidates",
+      "name": "Get Alternative Candidates",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [220, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "1YourJobVacanciesSheetIdHere",
+        "sheetName": "Active Jobs",
+        "filters": {
+          "values": [
+            {
+              "column": "status",
+              "value": "ACTIVE"
+            }
+          ]
+        }
+      },
+      "id": "get-all-jobs",
+      "name": "Get All Jobs",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [420, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "1YourCandidatesSheetIdHere",
+        "sheetName": "Candidates",
+        "filters": {
+          "values": [
+            {
+              "column": "email",
+              "value": "={{ $('Get Alternative Candidates').item(0).json.candidate_email }}"
+            }
+          ]
+        }
+      },
+      "id": "get-candidate-details",
+      "name": "Get Candidate Details",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [620, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a recruitment expert specializing in alternative job matching. Analyze the candidate's profile against ALL available job opportunities and find the best alternative matches.\n\nCandidate Profile:\nName: {{ $('Get Candidate Details').item(0).json.name }}\nOccupation: {{ $('Get Candidate Details').item(0).json.occupation }}\nSkills: {{ $('Get Candidate Details').item(0).json.skills }}\nExperience: {{ $('Get Candidate Details').item(0).json.experience_years }} years\n\nAvailable Jobs:\n{% for job in $('Get All Jobs').all() %}\nJob ID: {{ job.json.job_id }}\nTitle: {{ job.json.title }}\nRequirements: {{ job.json.requirements }}\nDescription: {{ job.json.description }}\n---\n{% endfor %}\n\nReturn your analysis as valid JSON:\n{\n  \"alternative_matches\": [\n    {\n      \"job_id\": \"job_id\",\n      \"job_title\": \"title\",\n      \"match_percentage\": number (0-100),\n      \"reasoning\": \"why this job matches the candidate\",\n      \"skill_gaps\": [\"skills candidate needs to develop\"],\n      \"transferable_skills\": [\"skills that transfer well\"]\n    }\n  ],\n  \"top_recommendation\": {\n    \"job_id\": \"best_match_job_id\",\n    \"confidence\": number (0-100)\n  }\n}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "find-alternatives",
+      "name": "Find Alternatives",
+      "type": "n8n-nodes-base.openAi",
+      "position": [820, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "your-openai-credential-id",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "1YourAlternativeMatchesSheetIdHere",
+        "sheetName": "Alternative Matches",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "candidate_email",
+              "value": "={{ $('Get Alternative Candidates').item(0).json.candidate_email }}"
+            },
+            {
+              "column": "alternative_jobs",
+              "value": "={{ JSON.parse($('Find Alternatives').item(0).json.message.content).alternative_matches.map(match => match.job_title + ' (' + match.match_percentage + '%)').join(', ') }}"
+            },
+            {
+              "column": "top_recommendation_job_id",
+              "value": "={{ JSON.parse($('Find Alternatives').item(0).json.message.content).top_recommendation.job_id }}"
+            },
+            {
+              "column": "confidence_score",
+              "value": "={{ JSON.parse($('Find Alternatives').item(0).json.message.content).top_recommendation.confidence }}"
+            },
+            {
+              "column": "analysis_date",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "save-alternatives",
+      "name": "Save Alternatives",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1020, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ JSON.parse($('Find Alternatives').item(0).json.message.content).top_recommendation.confidence }}",
+              "operation": "largerEqual",
+              "value2": 75
+            }
+          ]
+        }
+      },
+      "id": "check-confidence",
+      "name": "Check Confidence",
+      "type": "n8n-nodes-base.switch",
+      "position": [1220, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourrecruitmentagency.com",
+        "toEmail": "recruiter@yourrecruitmentagency.com",
+        "subject": "High Confidence Alternative Match Found",
+        "text": "A high confidence alternative match has been found:\n\nCandidate: {{ $('Get Candidate Details').item(0).json.name }}\nEmail: {{ $('Get Candidate Details').item(0).json.email }}\nCurrent Occupation: {{ $('Get Candidate Details').item(0).json.occupation }}\n\nRecommended Job: {{ JSON.parse($('Find Alternatives').item(0).json.message.content).top_recommendation.job_id }}\nConfidence Score: {{ JSON.parse($('Find Alternatives').item(0).json.message.content).top_recommendation.confidence }}%\n\nPlease review and consider reaching out to the candidate."
+      },
+      "id": "send-notification",
+      "name": "Send Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [1420, 300],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credential-id",
+          "name": "SMTP Credentials"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Get Alternative Candidates": {
+      "main": [
+        [
+          {
+            "node": "Get All Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Candidate Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Jobs": {
+      "main": [
+        [
+          {
+            "node": "Find Alternatives",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Candidate Details": {
+      "main": [
+        [
+          {
+            "node": "Find Alternatives",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Alternatives": {
+      "main": [
+        [
+          {
+            "node": "Save Alternatives",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Alternatives": {
+      "main": [
+        [
+          {
+            "node": "Check Confidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Confidence": {
+      "main": [
+        [
+          {
+            "node": "Send Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "sheet_name": "Match Results",
+  "description": "Results of candidate-job matching analysis",
+  "columns": [
+    {
+      "name": "match_id",
+      "type": "text",
+      "description": "Unique match identifier (auto-generated)",
+      "formula": "=CONCATENATE(\"MATCH_\", TEXT(ROW()-1, \"0000\"))",
+      "required": true
+    },
+    {
+      "name": "candidate_email",
+      "type": "text",
+      "description": "Email of the candidate being matched",
+      "validation": "Must exist in Candidates sheet",
+      "required": true
+    },
+    {
+      "name": "job_id",
+      "type": "text",
+      "description": "Job ID being matched against",
+      "validation": "Must exist in Active Jobs sheet",
+      "required": true
+    },
+    {
+      "name": "suitability_percentage",
+      "type": "number",
+      "description": "AI-generated suitability score (0-100)",
+      "validation": "Must be between 0 and 100",
+      "required": true
+    },
+    {
+      "name": "reasoning",
+      "type": "text",
+      "description": "AI-generated explanation for the match score",
+      "required": true
+    },
+    {
+      "name": "key_matches",
+      "type": "text",
+      "description": "Comma-separated list of matching skills/experience",
+      "required": false
+    },
+    {
+      "name": "gaps",
+      "type": "text",
+      "description": "Comma-separated list of missing requirements",
+      "required": false
+    },
+    {
+      "name": "recommendation",
+      "type": "text",
+      "description": "AI recommendation for this match",
+      "options": ["SUITABLE", "ALTERNATIVE", "REJECTED"],
+      "required": true
+    },
+    {
+      "name": "confidence_level",
+      "type": "text",
+      "description": "AI confidence in the assessment",
+      "options": ["HIGH", "MEDIUM", "LOW"],
+      "required": false
+    },
+    {
+      "name": "date_processed",
+      "type": "datetime",
+      "description": "When the matching was performed",
+      "format": "YYYY-MM-DD HH:MM:SS",
+      "required": true
+    },
+    {
+      "name": "processed_by",
+      "type": "text",
+      "description": "Which workflow/system processed this match",
+      "default": "n8n-auto",
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "description": "Current status of this match",
+      "options": ["PENDING", "REVIEWED", "CONTACTED", "INTERVIEWED", "REJECTED", "HIRED"],
+      "default": "PENDING",
+      "required": true
+    },
+    {
+      "name": "recruiter_notes",
+      "type": "text",
+      "description": "Notes added by recruiter after review",
+      "required": false
+    }
+  ],
+  "sample_data": [
+    {
+      "match_id": "MATCH_0001",
+      "candidate_email": "john.smith@email.com",
+      "job_id": "JOB_0001",
+      "suitability_percentage": 85,
+      "reasoning": "Strong match with 5 years Python experience, JavaScript expertise, and React skills. Education requirement met with Computer Science degree.",
+      "key_matches": "Python, JavaScript, React, Bachelor's degree, 5+ years experience",
+      "gaps": "Docker, AWS experience not mentioned",
+      "recommendation": "SUITABLE",
+      "confidence_level": "HIGH",
+      "date_processed": "2024-01-15 10:35:00",
+      "processed_by": "n8n-auto",
+      "status": "PENDING",
+      "recruiter_notes": ""
+    },
+    {
+      "match_id": "MATCH_0002",
+      "candidate_email": "sarah.johnson@email.com",
+      "job_id": "JOB_0001",
+      "suitability_percentage": 25,
+      "reasoning": "Marketing background doesn't align with software development role. No programming experience mentioned.",
+      "key_matches": "Bachelor's degree, 7 years experience",
+      "gaps": "Python, JavaScript, React, technical skills",
+      "recommendation": "REJECTED",
+      "confidence_level": "HIGH",
+      "date_processed": "2024-01-15 10:36:00",
+      "processed_by": "n8n-auto",
+      "status": "PENDING",
+      "recruiter_notes": ""
+    },
+    {
+      "match_id": "MATCH_0003",
+      "candidate_email": "sarah.johnson@email.com",
+      "job_id": "JOB_0002",
+      "suitability_percentage": 92,
+      "reasoning": "Excellent match with 7 years marketing experience, SEO expertise, and strong background in digital marketing campaigns.",
+      "key_matches": "Digital marketing, SEO, 7 years experience, Master's degree",
+      "gaps": "Google Ads certification not mentioned",
+      "recommendation": "SUITABLE",
+      "confidence_level": "HIGH",
+      "date_processed": "2024-01-16 14:25:00",
+      "processed_by": "n8n-auto",
+      "status": "PENDING",
+      "recruiter_notes": ""
+    }
+  ]
+}

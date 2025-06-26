@@ -1,0 +1,369 @@
+{
+  "name": "Reverse Candidate Matching Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "watchFolder",
+        "folderId": "1ActiveJobsFolderIdHere",
+        "event": "fileCreated"
+      },
+      "id": "job-upload-trigger",
+      "name": "Job Upload Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [220, 300],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "fileId": "={{ $json.id }}"
+      },
+      "id": "download-job-desc",
+      "name": "Download Job Description",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [420, 300],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractFromPDF",
+        "binaryPropertyName": "data"
+      },
+      "id": "extract-job-details",
+      "name": "Extract Job Details",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an expert job analyst. Extract key information from this job description and return it as valid JSON:\n{\n  \"job_title\": \"exact job title\",\n  \"company\": \"company name\",\n  \"location\": \"job location\",\n  \"salary_range\": \"salary if mentioned\",\n  \"required_skills\": [\"array of required skills\"],\n  \"preferred_skills\": [\"array of preferred skills\"],\n  \"experience_required\": \"years of experience needed\",\n  \"education_required\": \"education requirements\",\n  \"job_type\": \"full-time/part-time/contract\",\n  \"remote_option\": true/false,\n  \"key_responsibilities\": [\"main job duties\"],\n  \"industry\": \"industry sector\"\n}\n\nBe precise and extract only what's clearly stated."
+            },
+            {
+              "role": "user",
+              "content": "{{ $json.text }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "parse-job-details",
+      "name": "Parse Job Details",
+      "type": "n8n-nodes-base.openAi",
+      "position": [820, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "your-openai-credential-id",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "1YourJobVacanciesSheetIdHere",
+        "sheetName": "Active Jobs",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "job_id",
+              "value": "=CONCATENATE(\"JOB_\", TEXT(ROW(), \"0000\"))"
+            },
+            {
+              "column": "title",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).job_title }}"
+            },
+            {
+              "column": "company",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).company }}"
+            },
+            {
+              "column": "location",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).location }}"
+            },
+            {
+              "column": "requirements",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).required_skills.join(', ') }}"
+            },
+            {
+              "column": "description",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).key_responsibilities.join('; ') }}"
+            },
+            {
+              "column": "experience_required",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).experience_required }}"
+            },
+            {
+              "column": "salary_range",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).salary_range }}"
+            },
+            {
+              "column": "status",
+              "value": "ACTIVE"
+            },
+            {
+              "column": "date_posted",
+              "value": "={{ $now }}"
+            },
+            {
+              "column": "file_link",
+              "value": "={{ $('Job Upload Trigger').item(0).json.webViewLink }}"
+            }
+          ]
+        }
+      },
+      "id": "save-job-details",
+      "name": "Save Job Details",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1020, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "1YourCandidatesSheetIdHere",
+        "sheetName": "Candidates"
+      },
+      "id": "get-all-candidates",
+      "name": "Get All Candidates",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1220, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a recruitment expert specializing in candidate matching. Analyze ALL candidates in the database against this new job opportunity and identify the best matches.\n\nJob Details:\nTitle: {{ JSON.parse($('Parse Job Details').item(0).json.message.content).job_title }}\nRequired Skills: {{ JSON.parse($('Parse Job Details').item(0).json.message.content).required_skills.join(', ') }}\nExperience Required: {{ JSON.parse($('Parse Job Details').item(0).json.message.content).experience_required }}\nKey Responsibilities: {{ JSON.parse($('Parse Job Details').item(0).json.message.content).key_responsibilities.join(', ') }}\n\nCandidate Database:\n{% for candidate in $('Get All Candidates').all() %}\nName: {{ candidate.json.name }}\nEmail: {{ candidate.json.email }}\nOccupation: {{ candidate.json.occupation }}\nSkills: {{ candidate.json.skills }}\nExperience: {{ candidate.json.experience_years }} years\n---\n{% endfor %}\n\nAnalyze each candidate and return the results as valid JSON:\n{\n  \"suitable_candidates\": [\n    {\n      \"email\": \"candidate_email\",\n      \"name\": \"candidate_name\",\n      \"match_percentage\": number (0-100),\n      \"reasoning\": \"detailed explanation of why this candidate matches\",\n      \"key_strengths\": [\"candidate's matching strengths\"],\n      \"potential_concerns\": [\"areas that might need attention\"]\n    }\n  ],\n  \"top_matches\": [\n    {\n      \"email\": \"best_candidate_email\",\n      \"score\": number\n    }\n  ],\n  \"total_evaluated\": number\n}\n\nOnly include candidates with >60% match."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "match-candidates",
+      "name": "Match Candidates",
+      "type": "n8n-nodes-base.openAi",
+      "position": [1420, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "your-openai-credential-id",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "1YourReverseMatchesSheetIdHere",
+        "sheetName": "Reverse Matches",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "job_title",
+              "value": "={{ JSON.parse($('Parse Job Details').item(0).json.message.content).job_title }}"
+            },
+            {
+              "column": "suitable_candidates",
+              "value": "={{ JSON.parse($('Match Candidates').item(0).json.message.content).suitable_candidates.map(c => c.name + ' (' + c.match_percentage + '%)').join(', ') }}"
+            },
+            {
+              "column": "top_candidate_email",
+              "value": "={{ JSON.parse($('Match Candidates').item(0).json.message.content).top_matches[0]?.email || 'None' }}"
+            },
+            {
+              "column": "total_matches_found",
+              "value": "={{ JSON.parse($('Match Candidates').item(0).json.message.content).suitable_candidates.length }}"
+            },
+            {
+              "column": "total_evaluated",
+              "value": "={{ JSON.parse($('Match Candidates').item(0).json.message.content).total_evaluated }}"
+            },
+            {
+              "column": "analysis_date",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "save-reverse-matches",
+      "name": "Save Reverse Matches",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1620, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ JSON.parse($('Match Candidates').item(0).json.message.content).suitable_candidates.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "check-matches-found",
+      "name": "Check Matches Found",
+      "type": "n8n-nodes-base.switch",
+      "position": [1820, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourrecruitmentagency.com",
+        "toEmail": "recruiter@yourrecruitmentagency.com",
+        "subject": "New Job Posted - Candidate Matches Found",
+        "html": "<h2>New Job Opportunity - Candidate Matches Found</h2>\n\n<h3>Job Details:</h3>\n<p><strong>Title:</strong> {{ JSON.parse($('Parse Job Details').item(0).json.message.content).job_title }}</p>\n<p><strong>Company:</strong> {{ JSON.parse($('Parse Job Details').item(0).json.message.content).company }}</p>\n<p><strong>Location:</strong> {{ JSON.parse($('Parse Job Details').item(0).json.message.content).location }}</p>\n\n<h3>Matching Candidates Found:</h3>\n<table border=\"1\" cellpadding=\"5\">\n<tr><th>Name</th><th>Email</th><th>Match %</th><th>Key Strengths</th></tr>\n{% for candidate in JSON.parse($('Match Candidates').item(0).json.message.content).suitable_candidates %}\n<tr>\n<td>{{ candidate.name }}</td>\n<td>{{ candidate.email }}</td>\n<td>{{ candidate.match_percentage }}%</td>\n<td>{{ candidate.key_strengths.join(', ') }}</td>\n</tr>\n{% endfor %}\n</table>\n\n<p><strong>Total Candidates Evaluated:</strong> {{ JSON.parse($('Match Candidates').item(0).json.message.content).total_evaluated }}</p>\n<p><strong>Suitable Matches Found:</strong> {{ JSON.parse($('Match Candidates').item(0).json.message.content).suitable_candidates.length }}</p>\n\n<p>Please review these candidates and consider reaching out for interviews.</p>"
+      },
+      "id": "send-match-notification",
+      "name": "Send Match Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [2020, 300],
+      "credentials": {
+        "smtp": {
+          "id": "your-smtp-credential-id",
+          "name": "SMTP Credentials"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Job Upload Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Job Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Job Description": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Details": {
+      "main": [
+        [
+          {
+            "node": "Parse Job Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Job Details": {
+      "main": [
+        [
+          {
+            "node": "Save Job Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Job Details": {
+      "main": [
+        [
+          {
+            "node": "Get All Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Candidates": {
+      "main": [
+        [
+          {
+            "node": "Match Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Candidates": {
+      "main": [
+        [
+          {
+            "node": "Save Reverse Matches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Reverse Matches": {
+      "main": [
+        [
+          {
+            "node": "Check Matches Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Matches Found": {
+      "main": [
+        [
+          {
+            "node": "Send Match Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

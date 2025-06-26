@@ -1,0 +1,127 @@
+{
+  "sheet_name": "Candidates",
+  "description": "Master database of all processed candidates",
+  "columns": [
+    {
+      "name": "id",
+      "type": "text",
+      "description": "Unique candidate identifier (auto-generated)",
+      "formula": "=CONCATENATE(\"CAND_\", TEXT(ROW()-1, \"0000\"))",
+      "required": true
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "description": "Full name of the candidate",
+      "validation": "Must not be empty",
+      "required": true
+    },
+    {
+      "name": "email",
+      "type": "text",
+      "description": "Primary email address",
+      "validation": "Must be valid email format",
+      "required": true,
+      "unique": true
+    },
+    {
+      "name": "phone",
+      "type": "text",
+      "description": "Primary phone number",
+      "validation": "Phone number format",
+      "required": false
+    },
+    {
+      "name": "address",
+      "type": "text",
+      "description": "Complete address",
+      "required": false
+    },
+    {
+      "name": "occupation",
+      "type": "text",
+      "description": "Current or most recent job title",
+      "required": true
+    },
+    {
+      "name": "skills",
+      "type": "text",
+      "description": "Comma-separated list of skills",
+      "example": "Python, JavaScript, Project Management, SQL",
+      "required": true
+    },
+    {
+      "name": "experience_years",
+      "type": "number",
+      "description": "Total years of professional experience",
+      "validation": "Must be 0 or positive number",
+      "required": true
+    },
+    {
+      "name": "education",
+      "type": "text",
+      "description": "Highest education level",
+      "example": "Bachelor's in Computer Science, Master's in Business Administration",
+      "required": false
+    },
+    {
+      "name": "cv_path",
+      "type": "text",
+      "description": "Google Drive link to CV file",
+      "required": true
+    },
+    {
+      "name": "date_added",
+      "type": "datetime",
+      "description": "When candidate was added to database",
+      "format": "YYYY-MM-DD HH:MM:SS",
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "description": "Current status of candidate",
+      "options": ["ACTIVE", "PLACED", "INACTIVE", "BLOCKED"],
+      "default": "ACTIVE",
+      "required": true
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "description": "Additional notes about the candidate",
+      "required": false
+    }
+  ],
+  "sample_data": [
+    {
+      "id": "CAND_0001",
+      "name": "John Smith",
+      "email": "john.smith@email.com",
+      "phone": "+1-555-0123",
+      "address": "123 Main St, City, State 12345",
+      "occupation": "Software Developer",
+      "skills": "Python, JavaScript, React, Node.js, MongoDB",
+      "experience_years": 5,
+      "education": "Bachelor's in Computer Science",
+      "cv_path": "https://drive.google.com/file/d/1abc123/view",
+      "date_added": "2024-01-15 10:30:00",
+      "status": "ACTIVE",
+      "notes": "Strong full-stack developer with startup experience"
+    },
+    {
+      "id": "CAND_0002",
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@email.com",
+      "phone": "+1-555-0124",
+      "address": "456 Oak Ave, City, State 12346",
+      "occupation": "Marketing Manager",
+      "skills": "Digital Marketing, SEO, Google Analytics, Content Strategy, Social Media",
+      "experience_years": 7,
+      "education": "Master's in Marketing",
+      "cv_path": "https://drive.google.com/file/d/1def456/view",
+      "date_added": "2024-01-16 14:20:00",
+      "status": "ACTIVE",
+      "notes": "Excellent track record in B2B marketing campaigns"
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "sheet_name": "Alternative Matches",
+  "description": "Alternative job suggestions for candidates who didn't match primary roles",
+  "columns": [
+    {
+      "name": "alt_match_id",
+      "type": "text",
+      "description": "Unique alternative match identifier (auto-generated)",
+      "formula": "=CONCATENATE(\"ALT_\", TEXT(ROW()-1, \"0000\"))",
+      "required": true
+    },
+    {
+      "name": "candidate_email",
+      "type": "text",
+      "description": "Email of the candidate",
+      "validation": "Must exist in Candidates sheet",
+      "required": true
+    },
+    {
+      "name": "original_job_id",
+      "type": "text",
+      "description": "Original job they didn't match",
+      "validation": "Must exist in Active Jobs sheet",
+      "required": false
+    },
+    {
+      "name": "alternative_jobs",
+      "type": "text",
+      "description": "Comma-separated list of alternative job titles with scores",
+      "example": "Marketing Coordinator (78%), Digital Marketing Specialist (85%)",
+      "required": true
+    },
+    {
+      "name": "top_recommendation_job_id",
+      "type": "text",
+      "description": "Job ID of the best alternative match",
+      "validation": "Must exist in Active Jobs sheet",
+      "required": true
+    },
+    {
+      "name": "confidence_score",
+      "type": "number",
+      "description": "AI confidence in the top recommendation (0-100)",
+      "validation": "Must be between 0 and 100",
+      "required": true
+    },
+    {
+      "name": "reasoning",
+      "type": "text",
+      "description": "Why these alternatives were suggested",
+      "required": true
+    },
+    {
+      "name": "transferable_skills",
+      "type": "text",
+      "description": "Skills that transfer well to alternative roles",
+      "required": false
+    },
+    {
+      "name": "skill_gaps",
+      "type": "text",
+      "description": "Skills candidate needs to develop",
+      "required": false
+    },
+    {
+      "name": "analysis_date",
+      "type": "datetime",
+      "description": "When the alternative analysis was performed",
+      "format": "YYYY-MM-DD HH:MM:SS",
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "description": "Status of alternative matching process",
+      "options": ["PENDING", "REVIEWED", "CONTACTED", "PRESENTED", "ACCEPTED", "DECLINED"],
+      "default": "PENDING",
+      "required": true
+    },
+    {
+      "name": "recruiter_action",
+      "type": "text",
+      "description": "Action taken by recruiter",
+      "options": ["NONE", "CONTACTED_CANDIDATE", "PRESENTED_TO_CLIENT", "SCHEDULED_INTERVIEW"],
+      "default": "NONE",
+      "required": true
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "description": "Additional notes about alternative matching",
+      "required": false
+    }
+  ],
+  "sample_data": [
+    {
+      "alt_match_id": "ALT_0001",
+      "candidate_email": "john.smith@email.com",
+      "original_job_id": "JOB_0003",
+      "alternative_jobs": "Junior Software Developer (88%), Backend Developer (82%), Full Stack Developer (85%)",
+      "top_recommendation_job_id": "JOB_0004",
+      "confidence_score": 88,
+      "reasoning": "Strong programming foundation makes candidate suitable for junior roles. Python and JavaScript skills transfer well to backend development.",
+      "transferable_skills": "Python, JavaScript, Problem-solving, Software architecture",
+      "skill_gaps": "Senior leadership experience, advanced system design",
+      "analysis_date": "2024-01-15 11:00:00",
+      "status": "PENDING",
+      "recruiter_action": "NONE",
+      "notes": ""
+    },
+    {
+      "alt_match_id": "ALT_0002",
+      "candidate_email": "sarah.johnson@email.com",
+      "original_job_id": "JOB_0001",
+      "alternative_jobs": "Marketing Manager (95%), Content Marketing Specialist (89%), Digital Marketing Lead (92%)",
+      "top_recommendation_job_id": "JOB_0005",
+      "confidence_score": 95,
+      "reasoning": "Extensive marketing experience aligns perfectly with marketing roles. Strong background in digital campaigns and SEO.",
+      "transferable_skills": "Digital marketing, SEO, Campaign management, Analytics, Content strategy",
+      "skill_gaps": "Technical programming skills",
+      "analysis_date": "2024-01-16 14:30:00",
+      "status": "REVIEWED",
+      "recruiter_action": "CONTACTED_CANDIDATE",
+      "notes": "Candidate very interested in Marketing Manager role. Scheduled call for tomorrow."
+    }
+  ]
+}

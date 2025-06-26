@@ -1,0 +1,418 @@
+{
+  "name": "Main CV Processing Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "watchFolder",
+        "folderId": "1YourFolderIdHere",
+        "event": "fileCreated"
+      },
+      "id": "google-drive-trigger",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [220, 300],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "move",
+        "fileId": "={{ $json.id }}",
+        "parentId": "1ProcessingFolderIdHere"
+      },
+      "id": "move-to-processing",
+      "name": "Move to Processing",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [420, 300],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "fileId": "={{ $json.id }}"
+      },
+      "id": "download-cv",
+      "name": "Download CV",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [620, 300],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractFromPDF",
+        "binaryPropertyName": "data"
+      },
+      "id": "extract-from-file",
+      "name": "Extract From File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [820, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an expert CV parser. Extract the following information from the CV text and return it as valid JSON:\n{\n  \"name\": \"full name\",\n  \"address\": \"complete address\",\n  \"occupation\": \"current or most recent job title\",\n  \"skills\": [\"array of skills\"],\n  \"experience_years\": number,\n  \"education\": \"highest education level\",\n  \"phone\": \"phone number\",\n  \"email\": \"email address\"\n}\n\nIf any field is not found, use null. Be precise and accurate."
+            },
+            {
+              "role": "user",
+              "content": "{{ $json.text }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "parse-cv-data",
+      "name": "Parse CV Data",
+      "type": "n8n-nodes-base.openAi",
+      "position": [1020, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "your-openai-credential-id",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a recruitment expert. Compare the candidate's profile against the job requirements and provide a suitability assessment.\n\nReturn your response as valid JSON:\n{\n  \"suitability_percentage\": number (0-100),\n  \"reasoning\": \"detailed explanation of why this percentage was assigned\",\n  \"key_matches\": [\"array of matching skills/experience\"],\n  \"gaps\": [\"array of missing requirements\"],\n  \"recommendation\": \"SUITABLE\" or \"ALTERNATIVE\" or \"REJECTED\"\n}\n\nJob Requirements:\n{{ $('Get Job Requirements').item(0).json.requirements }}\n\nCandidate Profile:\n{{ $json.message.content }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "job-matching",
+      "name": "Job Matching",
+      "type": "n8n-nodes-base.openAi",
+      "position": [1220, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "your-openai-credential-id",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": "1YourCandidatesSheetIdHere",
+        "sheetName": "Candidates",
+        "columnToMatchOn": "email",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "name",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).name }}"
+            },
+            {
+              "column": "address",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).address }}"
+            },
+            {
+              "column": "occupation",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).occupation }}"
+            },
+            {
+              "column": "skills",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).skills.join(', ') }}"
+            },
+            {
+              "column": "experience_years",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).experience_years }}"
+            },
+            {
+              "column": "phone",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).phone }}"
+            },
+            {
+              "column": "email",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).email }}"
+            },
+            {
+              "column": "cv_path",
+              "value": "={{ $('Google Drive Trigger').item(0).json.webViewLink }}"
+            },
+            {
+              "column": "date_added",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "save-candidate",
+      "name": "Save Candidate",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1420, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": "1YourMatchResultsSheetIdHere",
+        "sheetName": "Match Results",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "candidate_email",
+              "value": "={{ JSON.parse($('Parse CV Data').item(0).json.message.content).email }}"
+            },
+            {
+              "column": "job_id",
+              "value": "={{ $('Get Job Requirements').item(0).json.job_id }}"
+            },
+            {
+              "column": "suitability_percentage",
+              "value": "={{ JSON.parse($('Job Matching').item(0).json.message.content).suitability_percentage }}"
+            },
+            {
+              "column": "reasoning",
+              "value": "={{ JSON.parse($('Job Matching').item(0).json.message.content).reasoning }}"
+            },
+            {
+              "column": "recommendation",
+              "value": "={{ JSON.parse($('Job Matching').item(0).json.message.content).recommendation }}"
+            },
+            {
+              "column": "date_processed",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "save-match-result",
+      "name": "Save Match Result",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [1620, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ JSON.parse($('Job Matching').item(0).json.message.content).recommendation }}",
+              "operation": "equal",
+              "value2": "SUITABLE"
+            }
+          ]
+        }
+      },
+      "id": "check-recommendation",
+      "name": "Check Recommendation",
+      "type": "n8n-nodes-base.switch",
+      "position": [1820, 300]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "move",
+        "fileId": "={{ $('Google Drive Trigger').item(0).json.id }}",
+        "parentId": "1SuitableMatchesFolderIdHere"
+      },
+      "id": "move-to-suitable",
+      "name": "Move to Suitable",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [2020, 200],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "move",
+        "fileId": "={{ $('Google Drive Trigger').item(0).json.id }}",
+        "parentId": "1AlternativeMatchesFolderIdHere"
+      },
+      "id": "move-to-alternative",
+      "name": "Move to Alternative",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [2020, 400],
+      "credentials": {
+        "googleApi": {
+          "id": "your-google-api-credential-id",
+          "name": "Google API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "1YourJobVacanciesSheetIdHere",
+        "sheetName": "Active Jobs",
+        "filters": {
+          "values": [
+            {
+              "column": "status",
+              "value": "ACTIVE"
+            }
+          ]
+        }
+      },
+      "id": "get-job-requirements",
+      "name": "Get Job Requirements",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [820, 500],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "your-google-sheets-credential-id",
+          "name": "Google Sheets API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Move to Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to Processing": {
+      "main": [
+        [
+          {
+            "node": "Download CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CV": {
+      "main": [
+        [
+          {
+            "node": "Extract From File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Job Requirements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract From File": {
+      "main": [
+        [
+          {
+            "node": "Parse CV Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CV Data": {
+      "main": [
+        [
+          {
+            "node": "Job Matching",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Matching": {
+      "main": [
+        [
+          {
+            "node": "Save Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Candidate": {
+      "main": [
+        [
+          {
+            "node": "Save Match Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Match Result": {
+      "main": [
+        [
+          {
+            "node": "Check Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Move to Suitable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move to Alternative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

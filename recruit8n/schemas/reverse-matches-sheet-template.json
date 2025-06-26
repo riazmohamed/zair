@@ -1,0 +1,172 @@
+{
+  "sheet_name": "Reverse Matches",
+  "description": "Results of matching existing candidates against new job postings",
+  "columns": [
+    {
+      "name": "reverse_match_id",
+      "type": "text",
+      "description": "Unique reverse match identifier (auto-generated)",
+      "formula": "=CONCATENATE(\"REV_\", TEXT(ROW()-1, \"0000\"))",
+      "required": true
+    },
+    {
+      "name": "job_id",
+      "type": "text",
+      "description": "New job that was posted",
+      "validation": "Must exist in Active Jobs sheet",
+      "required": true
+    },
+    {
+      "name": "job_title",
+      "type": "text",
+      "description": "Title of the new job",
+      "required": true
+    },
+    {
+      "name": "company",
+      "type": "text",
+      "description": "Company posting the job",
+      "required": true
+    },
+    {
+      "name": "suitable_candidates",
+      "type": "text",
+      "description": "List of candidates with match percentages",
+      "example": "John Smith (85%), Sarah Johnson (92%), Mike Wilson (78%)",
+      "required": false
+    },
+    {
+      "name": "top_candidate_email",
+      "type": "text",
+      "description": "Email of the best matching candidate",
+      "validation": "Must exist in Candidates sheet if not empty",
+      "required": false
+    },
+    {
+      "name": "top_candidate_score",
+      "type": "number",
+      "description": "Match percentage of the top candidate",
+      "validation": "Must be between 0 and 100",
+      "required": false
+    },
+    {
+      "name": "total_matches_found",
+      "type": "number",
+      "description": "Number of suitable candidates found (>60% match)",
+      "validation": "Must be 0 or positive",
+      "required": true
+    },
+    {
+      "name": "total_evaluated",
+      "type": "number",
+      "description": "Total number of candidates evaluated",
+      "validation": "Must be positive",
+      "required": true
+    },
+    {
+      "name": "match_summary",
+      "type": "text",
+      "description": "AI-generated summary of the matching results",
+      "required": false
+    },
+    {
+      "name": "recommended_actions",
+      "type": "text",
+      "description": "AI-suggested next steps",
+      "required": false
+    },
+    {
+      "name": "analysis_date",
+      "type": "datetime",
+      "description": "When the reverse matching was performed",
+      "format": "YYYY-MM-DD HH:MM:SS",
+      "required": true
+    },
+    {
+      "name": "notification_sent",
+      "type": "boolean",
+      "description": "Whether recruiter was notified of matches",
+      "options": ["TRUE", "FALSE"],
+      "default": "FALSE",
+      "required": true
+    },
+    {
+      "name": "recruiter_reviewed",
+      "type": "boolean",
+      "description": "Whether recruiter has reviewed the matches",
+      "options": ["TRUE", "FALSE"],
+      "default": "FALSE",
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "description": "Current status of this reverse match",
+      "options": ["PENDING", "REVIEWED", "CANDIDATES_CONTACTED", "INTERVIEWS_SCHEDULED", "COMPLETED"],
+      "default": "PENDING",
+      "required": true
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "description": "Recruiter notes about this reverse match",
+      "required": false
+    }
+  ],
+  "sample_data": [
+    {
+      "reverse_match_id": "REV_0001",
+      "job_id": "JOB_0001",
+      "job_title": "Senior Software Developer",
+      "company": "TechCorp Inc",
+      "suitable_candidates": "John Smith (85%), Alex Chen (78%), Maria Garcia (72%)",
+      "top_candidate_email": "john.smith@email.com",
+      "top_candidate_score": 85,
+      "total_matches_found": 3,
+      "total_evaluated": 15,
+      "match_summary": "Found 3 strong candidates with relevant Python and JavaScript experience. John Smith stands out with full-stack expertise.",
+      "recommended_actions": "Contact John Smith immediately - excellent match. Schedule technical interviews for all three candidates.",
+      "analysis_date": "2024-01-15 09:05:00",
+      "notification_sent": "TRUE",
+      "recruiter_reviewed": "FALSE",
+      "status": "PENDING",
+      "notes": ""
+    },
+    {
+      "reverse_match_id": "REV_0002",
+      "job_id": "JOB_0002",
+      "job_title": "Marketing Specialist",
+      "company": "Growth Solutions",
+      "suitable_candidates": "Sarah Johnson (92%), Lisa Wong (67%)",
+      "top_candidate_email": "sarah.johnson@email.com",
+      "top_candidate_score": 92,
+      "total_matches_found": 2,
+      "total_evaluated": 8,
+      "match_summary": "Excellent match found with Sarah Johnson who has extensive digital marketing experience. Lisa Wong also shows potential.",
+      "recommended_actions": "Priority contact with Sarah Johnson - near perfect match. Consider Lisa Wong as backup option.",
+      "analysis_date": "2024-01-16 11:35:00",
+      "notification_sent": "TRUE",
+      "recruiter_reviewed": "TRUE",
+      "status": "CANDIDATES_CONTACTED",
+      "notes": "Sarah Johnson very interested, scheduled interview for next week. Lisa Wong also contacted."
+    },
+    {
+      "reverse_match_id": "REV_0003",
+      "job_id": "JOB_0006",
+      "job_title": "Data Scientist",
+      "company": "Analytics Pro",
+      "suitable_candidates": "",
+      "top_candidate_email": "",
+      "top_candidate_score": 0,
+      "total_matches_found": 0,
+      "total_evaluated": 12,
+      "match_summary": "No suitable candidates found in current database. Highest score was 45% - below threshold.",
+      "recommended_actions": "Consider posting job on job boards, reaching out to network, or adjusting requirements.",
+      "analysis_date": "2024-01-17 16:20:00",
+      "notification_sent": "TRUE",
+      "recruiter_reviewed": "TRUE",
+      "status": "COMPLETED",
+      "notes": "Need to source new candidates for this role. Requirements may be too specific."
+    }
+  ]
+}

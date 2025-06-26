@@ -1,0 +1,179 @@
+{
+  "sheet_name": "Active Jobs",
+  "description": "Database of all active job vacancies",
+  "columns": [
+    {
+      "name": "job_id",
+      "type": "text",
+      "description": "Unique job identifier (auto-generated)",
+      "formula": "=CONCATENATE(\"JOB_\", TEXT(ROW()-1, \"0000\"))",
+      "required": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "description": "Job title",
+      "required": true
+    },
+    {
+      "name": "company",
+      "type": "text",
+      "description": "Hiring company name",
+      "required": true
+    },
+    {
+      "name": "location",
+      "type": "text",
+      "description": "Job location",
+      "example": "New York, NY or Remote",
+      "required": true
+    },
+    {
+      "name": "requirements",
+      "type": "text",
+      "description": "Comma-separated list of required skills",
+      "example": "Python, 3+ years experience, Bachelor's degree",
+      "required": true
+    },
+    {
+      "name": "preferred_skills",
+      "type": "text",
+      "description": "Comma-separated list of preferred skills",
+      "required": false
+    },
+    {
+      "name": "description",
+      "type": "text",
+      "description": "Job description and key responsibilities",
+      "required": true
+    },
+    {
+      "name": "experience_required",
+      "type": "text",
+      "description": "Required years of experience",
+      "example": "3-5 years, Entry level, Senior level",
+      "required": true
+    },
+    {
+      "name": "education_required",
+      "type": "text",
+      "description": "Required education level",
+      "example": "Bachelor's degree in Computer Science",
+      "required": false
+    },
+    {
+      "name": "salary_range",
+      "type": "text",
+      "description": "Salary range if provided",
+      "example": "$80,000 - $120,000 per year",
+      "required": false
+    },
+    {
+      "name": "job_type",
+      "type": "text",
+      "description": "Type of employment",
+      "options": ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP"],
+      "default": "FULL_TIME",
+      "required": true
+    },
+    {
+      "name": "remote_option",
+      "type": "boolean",
+      "description": "Whether remote work is available",
+      "options": ["TRUE", "FALSE"],
+      "default": "FALSE",
+      "required": true
+    },
+    {
+      "name": "industry",
+      "type": "text",
+      "description": "Industry sector",
+      "example": "Technology, Healthcare, Finance",
+      "required": false
+    },
+    {
+      "name": "client_contact",
+      "type": "text",
+      "description": "Client contact person",
+      "required": false
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "description": "Current status of job posting",
+      "options": ["ACTIVE", "FILLED", "PAUSED", "CANCELLED"],
+      "default": "ACTIVE",
+      "required": true
+    },
+    {
+      "name": "date_posted",
+      "type": "datetime",
+      "description": "When job was posted",
+      "format": "YYYY-MM-DD HH:MM:SS",
+      "required": true
+    },
+    {
+      "name": "deadline",
+      "type": "date",
+      "description": "Application deadline",
+      "format": "YYYY-MM-DD",
+      "required": false
+    },
+    {
+      "name": "file_link",
+      "type": "text",
+      "description": "Google Drive link to job description file",
+      "required": false
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "description": "Additional notes about the job",
+      "required": false
+    }
+  ],
+  "sample_data": [
+    {
+      "job_id": "JOB_0001",
+      "title": "Senior Software Developer",
+      "company": "TechCorp Inc",
+      "location": "San Francisco, CA",
+      "requirements": "Python, JavaScript, React, 5+ years experience, Bachelor's degree",
+      "preferred_skills": "Docker, AWS, GraphQL, TypeScript",
+      "description": "Lead development of web applications; Mentor junior developers; Collaborate with product team",
+      "experience_required": "5+ years",
+      "education_required": "Bachelor's in Computer Science or related field",
+      "salary_range": "$120,000 - $160,000 per year",
+      "job_type": "FULL_TIME",
+      "remote_option": "TRUE",
+      "industry": "Technology",
+      "client_contact": "hiring@techcorp.com",
+      "status": "ACTIVE",
+      "date_posted": "2024-01-15 09:00:00",
+      "deadline": "2024-02-15",
+      "file_link": "https://drive.google.com/file/d/1job001/view",
+      "notes": "Urgent hire - client wants to fill ASAP"
+    },
+    {
+      "job_id": "JOB_0002",
+      "title": "Marketing Specialist",
+      "company": "Growth Solutions",
+      "location": "Remote",
+      "requirements": "Digital marketing, SEO, 3+ years experience",
+      "preferred_skills": "Google Ads, Facebook Ads, HubSpot, Analytics",
+      "description": "Develop marketing campaigns; Manage social media; Analyze campaign performance",
+      "experience_required": "3+ years",
+      "education_required": "Bachelor's in Marketing or related field",
+      "salary_range": "$60,000 - $80,000 per year",
+      "job_type": "FULL_TIME",
+      "remote_option": "TRUE",
+      "industry": "Marketing",
+      "client_contact": "hr@growthsolutions.com",
+      "status": "ACTIVE",
+      "date_posted": "2024-01-16 11:30:00",
+      "deadline": "2024-02-01",
+      "file_link": "https://drive.google.com/file/d/1job002/view",
+      "notes": "Looking for creative and analytical thinker"
+    }
+  ]
+}
